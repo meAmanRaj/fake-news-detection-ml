@@ -25,8 +25,9 @@ def predict():
 
     return jsonify({
         "prediction": result,
-        "confidence": f"{confidence:.2f}%"
+        "confidence": confidence
     })
+
 
 if __name__ == "__main__":
     app.run(debug=True)

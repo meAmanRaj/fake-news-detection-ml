@@ -1,36 +1,156 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Fake News Detector</title>
+    <title>Fake News Detection AI</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .card {
+            background: white;
+            padding: 40px;
+            width: 650px;
+            border-radius: 14px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.35);
+            text-align: center;
+        }
+
+        h1 {
+            color: #2c5364;
+        }
+
+        textarea {
+            width: 100%;
+            height: 160px;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+            margin-top: 15px;
+        }
+
+        button {
+            margin-top: 20px;
+            padding: 12px 30px;
+            font-size: 16px;
+            border: none;
+            border-radius: 8px;
+            background: #2c5364;
+            color: white;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #203a43;
+        }
+
+        .result {
+            margin-top: 25px;
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        .real { color: green; }
+        .fake { color: red; }
+
+        .meter {
+            width: 100%;
+            height: 18px;
+            background: #eee;
+            border-radius: 10px;
+            margin-top: 15px;
+            overflow: hidden;
+        }
+
+        .meter-fill {
+            height: 100%;
+            width: 0%;
+            background: green;
+            transition: width 0.5s ease;
+        }
+
+        .confidence-text {
+            margin-top: 6px;
+            color: gray;
+        }
+
+        .loading {
+            margin-top: 15px;
+            display: none;
+            color: #2c5364;
+            font-weight: bold;
+        }
+    </style>
 </head>
 
-<body style="font-family: Arial; text-align:center; margin-top:50px;">
+<body>
 
-<h1>Fake News Detection System</h1>
+<div class="card">
+    <h1>Fake News Detection AI</h1>
 
-<textarea id="newsText" rows="10" cols="60" placeholder="Paste news article here..."></textarea>
-<br><br>
+    <textarea id="newsText" placeholder="Paste news article here..."></textarea>
 
-<button onclick="checkNews()" style="padding:10px 20px; font-size:16px;">Check News</button>
+    <br>
+    <button onclick="checkNews()">Analyze News</button>
 
-<h2 id="result" style="margin-top:20px;"></h2>
+    <div class="loading" id="loading">Analyzing with ML model...</div>
+
+    <div class="result" id="result"></div>
+
+    <div class="meter">
+        <div class="meter-fill" id="meterFill"></div>
+    </div>
+
+    <div class="confidence-text" id="confidenceText"></div>
+</div>
 
 <script>
 async function checkNews() {
+
     let news = document.getElementById("newsText").value;
+
+    if(news.trim()===""){
+        alert("Enter news first");
+        return;
+    }
+
+    document.getElementById("loading").style.display = "block";
 
     let response = await fetch("/predict", {
         method: "POST",
-        headers: {
-            "Content-Type": "application/json"
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ news: news })
     });
 
     let data = await response.json();
 
-    document.getElementById("result").innerText =
-        data.prediction + " (Confidence: " + data.confidence + ")";
+    document.getElementById("loading").style.display = "none";
+
+    let resultDiv = document.getElementById("result");
+    let meter = document.getElementById("meterFill");
+
+    resultDiv.innerText = data.prediction;
+
+    if(data.prediction === "Real News"){
+        resultDiv.className = "result real";
+        meter.style.background = "green";
+    } else {
+        resultDiv.className = "result fake";
+        meter.style.background = "red";
+    }
+
+    meter.style.width = data.confidence + "%";
+
+    document.getElementById("confidenceText").innerText =
+        "Model confidence: " + data.confidence.toFixed(2) + "%";
 }
 </script>
 
